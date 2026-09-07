@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE gowin-synthesis-project>
+<Project>
+    <Version>beta</Version>
+    <Device id="GW2AR-18C" package="QFN88" speed="8" partNumber="GW2AR-LV18QN88C8/I7"/>
+    <FileList>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\countdown_timer.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\edge_finder.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\gowin_rpll_20k\gowin_rpll.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\i2c.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\i2c_mmio.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\ld2450_uart.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\leds.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\picorv32.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\reset.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\sd_spi_helper.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\simpleuart.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\sram.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\sram8bit.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\top.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\uart_wrap.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\ws2812b.v" type="verilog"/>
+        <File path="C:\Users\Mr T\Desktop\TangNano20K_Test\src\ws2812b_tgt.v" type="verilog"/>
+    </FileList>
+    <OptionList>
+        <Option type="disable_insert_pad" value="0"/>
+        <Option type="dsp_style" value="auto"/>
+        <Option type="global_freq" value="100.000"/>
+        <Option type="looplimit" value="2000"/>
+        <Option type="map_option" value="1"/>
+        <Option type="max_fanout" value="1000"/>
+        <Option type="netlist_hierarchy" value="1"/>
+        <Option type="opt_goal" value="auto"/>
+        <Option type="output_file" value="C:\Users\Mr T\Desktop\TangNano20K_Test\impl\gwsynthesis\picorv32_20k.vg"/>
+        <Option type="print_all_synthesis_warning" value="0"/>
+        <Option type="ram_rw_check" value="0"/>
+        <Option type="ram_style" value="auto"/>
+        <Option type="rom_style" value="auto"/>
+        <Option type="shift_reg" value="auto"/>
+        <Option type="vcc" value="1.0"/>
+        <Option type="verilog_language" value="verilog-2001"/>
+        <Option type="vhdl_language" value="vhdl-1993"/>
+    </OptionList>
+</Project>

@@ -1,0 +1,15 @@
+Tang Nano 20K firmware
+======================
+
+This directory contains the bare-metal PicoRV32 firmware for the Tang Nano
+20K LD2450 reader.  The system clock is configured by CLK_FREQ in Makefile
+and is currently 27000000 Hz.
+
+Build with the MSYS2 RISC-V toolchain:
+
+    make clean
+    make
+
+The build creates prog_20k.elf, prog_20k.bin, prog_20k.hex, and regenerates
+../src/mem_init0.ini through mem_init3.ini plus ../src/sys_parameters.v.
+Rebuild picorv32_20k.gprj after changing firmware.

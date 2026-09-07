@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module name="top" Register="1" Lut="496" T_Register="1449(1)" T_Alu="444(0)" T_Lut="3079(496)" T_Bsram="17(0)" T_Ssram="32(0)">
+ <SubModule name="main_pll"/>
+ <SubModule name="reset_controller" Register="6" Alu="6" Lut="2" T_Register="6(6)" T_Alu="6(6)" T_Lut="2(2)"/>
+ <SubModule name="uart" Lut="4" T_Register="131(0)" T_Alu="124(0)" T_Lut="108(4)">
+  <SubModule name="uart" Register="131" Alu="124" Lut="104" T_Register="131(131)" T_Alu="124(124)" T_Lut="104(104)"/>
+ </SubModule>
+ <SubModule name="cdt" Register="34" Lut="75" T_Register="34(34)" T_Lut="75(75)"/>
+ <SubModule name="ws2812b_led" T_Register="48(0)" T_Lut="79(0)">
+  <SubModule name="rgb_led" Register="48" Lut="79" T_Register="48(48)" T_Lut="79(79)"/>
+ </SubModule>
+ <SubModule name="radar_uart" Register="122" Lut="228" Ssram="8" T_Register="122(122)" T_Lut="228(228)" T_Ssram="8(8)"/>
+ <SubModule name="memory" Register="1" Lut="1" T_Register="1(1)" T_Lut="9(1)" T_Bsram="16(0)">
+  <SubModule name="gmem3" Lut="2" Bsram="4" T_Lut="2(2)" T_Bsram="4(4)"/>
+  <SubModule name="gmem2" Lut="2" Bsram="4" T_Lut="2(2)" T_Bsram="4(4)"/>
+  <SubModule name="gmem1" Lut="2" Bsram="4" T_Lut="2(2)" T_Bsram="4(4)"/>
+  <SubModule name="gmem0" Lut="2" Bsram="4" T_Lut="2(2)" T_Bsram="4(4)"/>
+ </SubModule>
+ <SubModule name="soc_leds" Register="6" Lut="1" T_Register="6(6)" T_Lut="1(1)"/>
+ <SubModule name="button2_finder" Register="4" Lut="1" T_Register="4(4)" T_Lut="1(1)"/>
+ <SubModule name="sd_spi_controller" Register="31" Lut="49" T_Register="31(31)" T_Lut="49(49)"/>
+ <SubModule name="cpu" Register="622" Alu="314" Lut="1619" Bsram="1" Ssram="24" T_Register="622(622)" T_Alu="314(314)" T_Lut="1619(1619)" T_Bsram="1(1)" T_Ssram="24(24)"/>
+ <SubModule name="i2c_mmio_inst" Register="145" Lut="29" T_Register="443(145)" T_Lut="412(29)">
+  <SubModule name="i2c_master_inst" Register="298" Lut="383" T_Register="298(298)" T_Lut="383(383)"/>
+ </SubModule>
+</Module>

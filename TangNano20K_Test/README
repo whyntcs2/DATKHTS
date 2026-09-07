@@ -1,0 +1,38 @@
+PicoRV32 SoC for Tang Nano 20K
+================================
+
+This project targets only the Sipeed Tang Nano 20K (GW2AR-LV18QN88C8/I7).
+The PicoRV32 system clock is 27 MHz.  Firmware is embedded in the FPGA
+bitstream through the SRAM initialization files in src/.
+
+The application configures a Hi-Link LD2450 radar for multi-target mode,
+reads all three target records through a dedicated 256000-baud UART, and
+prints X/Y coordinates, speed, and distance resolution through the board's
+USB UART at 115200 baud.
+
+Build firmware first:
+
+    cd c_code
+    make clean
+    make
+
+Then open picorv32_20k.gprj in Gowin EDA and run a full build.  The verified
+bitstream is impl/pnr/picorv32_20k.fs.  See LD2450_README.md for wiring and
+the radar MMIO register map.
+
+Full SoC simulation
+-------------------
+
+After building the firmware, run this command from PowerShell:
+
+    powershell -ExecutionPolicy Bypass -File .\sim\run_full_soc_testbench.ps1
+
+The test runs the real PicoRV32 firmware, models the LD2450 configuration
+ACKs and a three-target frame, checks the USB UART text, and checks the LED
+target mask.  Success ends with:
+
+    PASS: full PicoRV32 firmware + LD2450 three-target integration
+
+Icarus may report that the mem_init files contain fewer than 8192 entries.
+That is expected: the files contain the firmware image, while the unused
+remainder of the 32 KiB SRAM does not need initialization for this test.

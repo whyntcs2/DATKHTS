@@ -1,0 +1,224 @@
+[
+    {
+        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+        "InstLine": 2174,
+        "InstName": "picorv32_regs",
+        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+        "ModuleLine": 2174,
+        "ModuleName": "picorv32_regs"
+    },
+    {
+        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+        "InstLine": 2517,
+        "InstName": "picorv32_axi",
+        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+        "ModuleLine": 2517,
+        "ModuleName": "picorv32_axi",
+        "SubInsts": [
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+                "InstLine": 2619,
+                "InstName": "axi_adapter",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+                "ModuleLine": 2731,
+                "ModuleName": "picorv32_axi_adapter"
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+                "InstLine": 2674,
+                "InstName": "picorv32_core",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+                "ModuleLine": 62,
+                "ModuleName": "picorv32"
+            }
+        ]
+    },
+    {
+        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+        "InstLine": 2815,
+        "InstName": "picorv32_wb",
+        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+        "ModuleLine": 2815,
+        "ModuleName": "picorv32_wb",
+        "SubInsts": [
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+                "InstLine": 2938,
+                "InstName": "picorv32_core",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+                "ModuleLine": 62,
+                "ModuleName": "picorv32"
+            }
+        ]
+    },
+    {
+        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+        "InstLine": 28,
+        "InstName": "top",
+        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+        "ModuleLine": 28,
+        "ModuleName": "top",
+        "SubInsts": [
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 141,
+                "InstName": "main_pll",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/gowin_rpll_20k/gowin_rpll.v",
+                "ModuleLine": 10,
+                "ModuleName": "Gowin_rPLL"
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 198,
+                "InstName": "reset_controller",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/reset.v",
+                "ModuleLine": 3,
+                "ModuleName": "reset_control"
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 205,
+                "InstName": "uart",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/uart_wrap.v",
+                "ModuleLine": 3,
+                "ModuleName": "uart_wrap",
+                "SubInsts": [
+                    {
+                        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/uart_wrap.v",
+                        "InstLine": 29,
+                        "InstName": "uart",
+                        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/simpleuart.v",
+                        "ModuleLine": 20,
+                        "ModuleName": "simpleuart"
+                    }
+                ]
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 219,
+                "InstName": "cdt",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/countdown_timer.v",
+                "ModuleLine": 16,
+                "ModuleName": "countdown_timer"
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 231,
+                "InstName": "ws2812b_led",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/ws2812b_tgt.v",
+                "ModuleLine": 8,
+                "ModuleName": "ws2812b_tgt",
+                "SubInsts": [
+                    {
+                        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/ws2812b_tgt.v",
+                        "InstLine": 26,
+                        "InstName": "rgb_led",
+                        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/ws2812b.v",
+                        "ModuleLine": 12,
+                        "ModuleName": "ws2812b"
+                    }
+                ]
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 246,
+                "InstName": "radar_uart",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/ld2450_uart.v",
+                "ModuleLine": 11,
+                "ModuleName": "ld2450_uart"
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 259,
+                "InstName": "memory",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram.v",
+                "ModuleLine": 6,
+                "ModuleName": "sram",
+                "SubInsts": [
+                    {
+                        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram.v",
+                        "InstLine": 27,
+                        "InstName": "gmem3",
+                        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram8bit.v",
+                        "ModuleLine": 15,
+                        "ModuleName": "sram8"
+                    },
+                    {
+                        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram.v",
+                        "InstLine": 42,
+                        "InstName": "gmem2",
+                        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram8bit.v",
+                        "ModuleLine": 15,
+                        "ModuleName": "sram8"
+                    },
+                    {
+                        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram.v",
+                        "InstLine": 57,
+                        "InstName": "gmem1",
+                        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram8bit.v",
+                        "ModuleLine": 15,
+                        "ModuleName": "sram8"
+                    },
+                    {
+                        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram.v",
+                        "InstLine": 72,
+                        "InstName": "gmem0",
+                        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram8bit.v",
+                        "ModuleLine": 15,
+                        "ModuleName": "sram8"
+                    }
+                ]
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 271,
+                "InstName": "soc_leds",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/leds.v",
+                "ModuleLine": 7,
+                "ModuleName": "tang_leds"
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 282,
+                "InstName": "button2_finder",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/edge_finder.v",
+                "ModuleLine": 7,
+                "ModuleName": "edge_finder"
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 290,
+                "InstName": "sd_spi_controller",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sd_spi_helper.v",
+                "ModuleLine": 19,
+                "ModuleName": "sd_spi_helper"
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 320,
+                "InstName": "cpu",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+                "ModuleLine": 62,
+                "ModuleName": "picorv32"
+            },
+            {
+                "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+                "InstLine": 334,
+                "InstName": "i2c_mmio_inst",
+                "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/i2c_mmio.v",
+                "ModuleLine": 3,
+                "ModuleName": "i2c_mmio",
+                "SubInsts": [
+                    {
+                        "InstFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/i2c_mmio.v",
+                        "InstLine": 112,
+                        "InstName": "i2c_master_inst",
+                        "ModuleFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/i2c.v",
+                        "ModuleLine": 18,
+                        "ModuleName": "i2c_master"
+                    }
+                ]
+            }
+        ]
+    }
+]

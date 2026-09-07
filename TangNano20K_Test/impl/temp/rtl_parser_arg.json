@@ -1,0 +1,80 @@
+{
+    "Device": "GW2AR-18C",
+    "Files": [
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/countdown_timer.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/edge_finder.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/gowin_rpll_20k/gowin_rpll.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/i2c.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/i2c_mmio.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/ld2450_uart.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/leds.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/picorv32.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/reset.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sd_spi_helper.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/simpleuart.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/sram8bit.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/top.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/uart_wrap.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/ws2812b.v",
+            "Type": "verilog"
+        },
+        {
+            "Path": "C:/Users/Mr T/Desktop/TangNano20K_Test/src/ws2812b_tgt.v",
+            "Type": "verilog"
+        }
+    ],
+    "IncludePath": [
+    ],
+    "LoopLimit": 2000,
+    "ResultFile": "C:/Users/Mr T/Desktop/TangNano20K_Test/impl/temp/rtl_parser.result",
+    "Top": "",
+    "VerilogStd": "verilog_2001",
+    "VhdlStd": "vhdl_93"
+}

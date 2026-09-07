@@ -1,0 +1,350 @@
+/* Copyright 2025 Grug Huhler.  License SPDX BSD-2-Clause.
+
+Top level module of simple SoC based on picorv32
+
+See top level README for capabilities.
+
+The picorv32 core has a very simple memory interface.
+See https://github.com/YosysHQ/picorv32
+
+In this SoC, slave (target) device has signals:
+
+   * SLAVE_sel - this is asserted when mem_valid == 1 and mem_addr targets the slave.
+     It "tells" the slave that it is active.  It must accept a write for provide data
+     for a read.
+   * SLAVE_ready - this is asserted by the slave when it is done with the transaction.
+     Core signal mem_ready is the OR of all of the SLAVE_ready signals.
+   * Core mem_addr, mem_wdata, and mem_wstrb can be passed to all slaves directly.
+     The latter is a byte lane enable for writes.
+   * Each slave drives SLAVE_data_o.  The core's mem_rdata is formed by selecting the
+     correct SLAVE_data_o based on SLAVE_sel.
+*/
+
+`include "global_defs.v"
+
+// Define this for logic analyer connections and enable picorv32_la.cst.
+//`define USE_LA
+
+module top (
+            input wire        clk_in, // Must be 27 MHz
+            input wire        reset_button,
+            input wire        button2,
+            output wire       ws2812b_din,
+            input wire        radar_rx,
+            output wire       radar_tx,
+            input wire        sd_miso,
+            output wire       sd_cs,
+            output wire       sd_mosi,
+            output wire       sd_clk,
+            input wire        uart_rx,
+            output wire       uart_tx,
+            output wire       oled_scl,
+            inout  wire       oled_sda,
+`ifdef USE_LA
+            output wire       clk_out,
+            output wire       mem_instr, 
+            output wire       mem_valid,
+            output wire       mem_ready,
+            output wire       b25,
+            output wire       b24,
+            output wire       b17,
+            output wire       b16,
+            output wire       b09,
+            output wire       b08,
+            output wire       b01,
+            output wire       b00,
+            output wire [3:0] mem_wstrb,
+`endif
+            output wire [5:0] leds
+            );
+
+   parameter BARREL_SHIFTER = 0;
+   parameter ENABLE_MUL = 0;
+   parameter ENABLE_DIV = 0;
+   parameter ENABLE_FAST_MUL = 0;
+   parameter ENABLE_COMPRESSED = 0;
+   parameter ENABLE_IRQ = 1;
+   parameter ENABLE_IRQ_QREGS = 1;
+   parameter MASKED_IRQ = 32'hffff_fff0;
+   parameter LATCHED_IRQ = 32'hffff_ffff;
+
+   parameter        MEMBYTES = 4*(1 << SRAM_ADDR_WIDTH); 
+   parameter [31:0] STACKADDR = (MEMBYTES);         // Grows down.  Software should set it.
+   parameter [31:0] PROGADDR_RESET = 32'h0000_0000;
+   parameter [31:0] PROGADDR_IRQ = 32'h0000_0010;
+
+   // This include gets SRAM_ADDR_WIDTH from software build process
+   `include "sys_parameters.v"
+
+   wire                       clk;
+   wire                       reset_n; 
+   wire                       mem_valid;
+   wire                       mem_instr;
+   wire [31:0]                mem_addr;
+   wire [31:0]                mem_wdata;
+   wire [31:0]                mem_rdata;
+   wire [3:0]                 mem_wstrb;
+   wire                       mem_ready;
+   wire                       mem_inst;
+   wire                       leds_sel;
+   wire                       leds_ready;
+   wire [31:0]                leds_data_o;
+   wire                       sram_sel;
+   wire                       sram_ready;
+   wire [31:0]                sram_data_o;
+   wire                       cdt_sel;
+   wire                       cdt_ready;
+   wire [31:0]                cdt_data_o;
+   wire                       uart_sel;
+   wire [31:0]                uart_data_o;
+   wire                       uart_ready;
+   wire                       ws2812b_sel;
+   wire                       ws2812b_ready;
+   wire                       radar_uart_sel;
+   wire                       radar_uart_ready;
+   wire [31:0]                radar_uart_data_o;
+   wire                       sd_spi_sel;
+   wire                       sd_spi_ready;
+   wire [31:0]                sd_spi_data_o;
+   // default_sel causes a response when nothing else does
+   wire                       default_sel;
+   reg                        default_ready;
+   wire                       button2_pulse;
+//I2C
+    wire i2c_sel;
+    wire i2c_ready;
+    wire [31:0] i2c_rdata;
+
+    wire i2c_scl_oe;
+    wire i2c_sda_oe;
+    wire i2c_sda_in;
+    assign i2c_sel = mem_valid &&
+                 (mem_addr >= 32'h80000040) &&
+                 (mem_addr <= 32'h8000006C);
+    assign oled_scl = i2c_scl_oe ? 1'b0 : 1'bz;
+    assign oled_sda = i2c_sda_oe ? 1'b0 : 1'bz;
+    assign i2c_sda_in = oled_sda;
+`ifdef USE_LA
+   // Assigns for external logic analyzer connction
+   assign clk_out = clk;
+   assign b25 = mem_rdata[25];
+   assign b24 = mem_rdata[24];
+   assign b17 = mem_rdata[17];
+   assign b16 = mem_rdata[16];
+   assign b09 = mem_rdata[9];
+   assign b08 = mem_rdata[8];
+   assign b01 = mem_rdata[1];
+   assign b00 = mem_rdata[0];
+`endif
+
+   // Set clk's frequency to CLK_FREQ from c_code/Makefile
+   Gowin_rPLL #(.IDIV_SEL(IDIV_SEL), .FBDIV_SEL(FBDIV_SEL), .ODIV_SEL(ODIV_SEL)) main_pll (
+      .clkout(clk),
+      .clkin(clk_in)
+   );
+
+   // Establish memory map for all slaves:
+   //    SRAM 00000000 - 0001ffff
+   //    LED  80000000
+   //    UART 80000008 - 8000000f
+   //    CDT  80000010 - 80000013
+   // ws2812b 80000020 - 80000023
+   // sd_spi  80000030 - 8000003f
+   // i2c     80000040 - 8000006f
+   // radar   80000070 - 8000007f  (LD2450 UART)
+
+   assign sram_sel = mem_valid && (mem_addr < MEMBYTES);
+   assign leds_sel = mem_valid && (mem_addr == 32'h80000000);
+   assign uart_sel = mem_valid && ((mem_addr & 32'hfffffff8) == 32'h80000008);
+   assign cdt_sel = mem_valid && (mem_addr == 32'h80000010);
+   assign ws2812b_sel = mem_valid && (mem_addr == 32'h80000020);
+   assign radar_uart_sel = mem_valid &&
+                           ((mem_addr & 32'hfffffff0) == 32'h80000070);
+   assign sd_spi_sel = mem_valid && ((mem_addr & 32'hfffffff0) == 32'h80000030);
+
+   // Core can proceed based on which slave was targetted and is now ready.
+   assign mem_ready = mem_valid &
+      (sram_ready | leds_ready | uart_ready | cdt_ready | 
+        ws2812b_ready | radar_uart_ready |
+        sd_spi_sel | i2c_ready | default_ready);
+
+   // Select which slave's output data is to be fed to core.
+   assign mem_rdata = sram_sel    ? sram_data_o :
+                      leds_sel    ? leds_data_o :
+                      uart_sel    ? uart_data_o :
+                      radar_uart_sel ? radar_uart_data_o :
+                      sd_spi_sel  ? sd_spi_data_o :
+                      i2c_sel     ? i2c_rdata :
+                      cdt_sel     ? cdt_data_o  : 32'hdeadbeef;
+
+   assign leds = ~leds_data_o[5:0]; // Connect to the LEDs off the FPGA
+
+   // The default devices responds to accesses to addresses that don't
+   // map to any device.
+
+   assign default_sel = mem_valid & !sram_sel & !leds_sel & !uart_sel &
+                       !ws2812b_sel & !radar_uart_sel &
+                       !sd_spi_sel & !i2c_sel & !cdt_sel;
+
+   always @(posedge clk or negedge reset_n)
+     if (!reset_n)
+       default_ready <= 1'b0;
+     else
+        if (default_sel)
+           default_ready <= 1'b1;
+        else
+           default_ready <= 1'b0;
+
+   reset_control reset_controller
+     (
+      .clk(clk),
+      .reset_button(reset_button),
+      .reset_n(reset_n)
+      );
+
+   uart_wrap uart
+     (
+      .clk(clk),
+      .reset_n(reset_n),
+      .uart_tx(uart_tx),
+      .uart_rx(uart_rx),
+      .uart_sel(uart_sel),
+      .addr(mem_addr[3:0]),
+      .uart_wstrb(mem_wstrb),
+      .uart_di(mem_wdata),
+      .uart_do(uart_data_o),
+      .uart_ready(uart_ready)
+      );
+
+   countdown_timer cdt
+     (
+      .clk(clk),
+      .reset_n(reset_n),
+      .cdt_sel(cdt_sel),
+      .cdt_data_i(mem_wdata),
+      .we(mem_wstrb),
+      .cdt_ready(cdt_ready),
+      .cdt_data_o(cdt_data_o)
+      );
+
+   /* ws2812b_tgt is 32b write only */
+   ws2812b_tgt #(.CLK_FREQ(CLK_FREQ)) ws2812b_led
+     (
+      .clk(clk),
+      .reset_n(reset_n),
+      .ws2812b_sel(ws2812b_sel),
+      .we(&mem_wstrb),
+      .wdata({mem_wdata[15:8], mem_wdata[23:16], mem_wdata[7:0]}),
+      .ws2812b_ready(ws2812b_ready),
+      .to_din(ws2812b_din)
+      );
+
+   ld2450_uart #(
+      .CLK_FREQ(CLK_FREQ),
+      .BAUD(256000),
+      .FIFO_ADDR_WIDTH(6)
+   ) radar_uart (
+      .clk(clk),
+      .reset_n(reset_n),
+      .sel(radar_uart_sel),
+      .addr(mem_addr[3:2]),
+      .wstrb(mem_wstrb),
+      .wdata(mem_wdata),
+      .rdata(radar_uart_data_o),
+      .ready(radar_uart_ready),
+      .radar_rx(radar_rx),
+      .radar_tx(radar_tx)
+   );
+
+   sram #(.SRAM_ADDR_WIDTH(SRAM_ADDR_WIDTH)) memory
+     (
+      .clk(clk),
+      .reset_n(reset_n),
+      .sram_sel(sram_sel),
+      .wstrb(mem_wstrb),
+      .addr(mem_addr[SRAM_ADDR_WIDTH + 1:0]),
+      .sram_data_i(mem_wdata),
+      .sram_ready(sram_ready),
+      .sram_data_o(sram_data_o)
+      );
+   
+   tang_leds soc_leds
+     (
+      .clk(clk),
+      .reset_n(reset_n),
+      .leds_sel(leds_sel),
+      .leds_data_i(mem_wdata[5:0]),
+      .we(mem_wstrb[0]),
+      .leds_ready(leds_ready),
+      .leds_data_o(leds_data_o)
+      );
+
+    edge_finder button2_finder
+      (
+         .clk(clk),
+         .reset_n(reset_n),
+         .sig_in(~button2),
+         .pulse(button2_pulse)
+      );
+
+    sd_spi_helper sd_spi_controller
+      (
+         .clk(clk),
+         .reset_n(reset_n),
+         .sd_spi_sel(sd_spi_sel),
+         .addr(mem_addr[3:2]),
+         .sd_spi_data_i(mem_wdata[7:0]),
+         .we(mem_wstrb[0]),
+         .sd_spi_ready(sd_spi_ready),
+         .sd_spi_data_o(sd_spi_data_o),
+         .sd_miso(sd_miso),
+         .sd_mosi(sd_mosi),
+         .sd_cs(sd_cs),
+         .sd_clk(sd_clk)
+       );
+   
+   picorv32
+     #(
+       .STACKADDR(STACKADDR),
+       .PROGADDR_RESET(PROGADDR_RESET),
+       .PROGADDR_IRQ(PROGADDR_IRQ),
+       .BARREL_SHIFTER(BARREL_SHIFTER),
+       .COMPRESSED_ISA(ENABLE_COMPRESSED),
+       .ENABLE_MUL(ENABLE_MUL),
+       .ENABLE_DIV(ENABLE_DIV),
+       .ENABLE_FAST_MUL(ENABLE_FAST_MUL),
+       .ENABLE_IRQ(ENABLE_IRQ),
+       .ENABLE_IRQ_QREGS(ENABLE_IRQ_QREGS),
+       .MASKED_IRQ(MASKED_IRQ),
+       .LATCHED_IRQ(LATCHED_IRQ)
+       ) cpu
+       (
+        .clk         (clk),
+        .resetn      (reset_n),
+        .mem_valid   (mem_valid),
+        .mem_instr   (mem_instr),
+        .mem_ready   (mem_ready),
+        .mem_addr    (mem_addr),
+        .mem_wdata   (mem_wdata),
+        .mem_wstrb   (mem_wstrb),
+        .mem_rdata   (mem_rdata),
+        .irq         ({28'b0, button2_pulse, 3'b0})
+        );
+
+    i2c_mmio i2c_mmio_inst (
+    .clk(clk),
+    .resetn(reset_n),
+
+    .valid(i2c_sel),
+    .wen(|mem_wstrb),
+    .addr(mem_addr),
+    .wdata(mem_wdata),
+    .rdata(i2c_rdata),
+    .ready(i2c_ready),
+
+    .scl_oe(i2c_scl_oe),
+    .sda_oe(i2c_sda_oe),
+    .sda_in(i2c_sda_in)
+);
+
+endmodule // top
