@@ -3,11 +3,7 @@ import csv
 import time
 from datetime import datetime
 from pathlib import Path
-
-# =========================================================
-# CẤU HÌNH - CHỈ CẦN SỬA PHẦN NÀY RỒI BẤM RUN
-# =========================================================
-
+# Config
 PORT = "COM3"
 BAUD = 115200
 
