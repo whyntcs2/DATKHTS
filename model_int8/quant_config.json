@@ -1,0 +1,51 @@
+{
+    "architecture": [
+        15,
+        24,
+        12,
+        3
+    ],
+    "labels": {
+        "STILL": 0,
+        "WALK": 1,
+        "FAST": 2
+    },
+    "features": [
+        "dx_mm",
+        "dy_mm",
+        "mean_vx_mm_s",
+        "mean_vy_mm_s",
+        "mean_speed_mm_s",
+        "median_speed_mm_s",
+        "max_speed_mm_s",
+        "p90_speed_mm_s",
+        "mean_accel_mm_s2",
+        "median_accel_mm_s2",
+        "max_accel_mm_s2",
+        "std_speed_mm_s",
+        "path_length_mm",
+        "net_displacement_mm",
+        "straightness"
+    ],
+    "input_scale": 0.11223038626702184,
+    "w1_scale": 0.005645871631742462,
+    "a1_scale": 0.11009644335649145,
+    "w2_scale": 0.004478555964672659,
+    "a2_scale": 0.05869652530339759,
+    "w3_scale": 0.005903005599975586,
+    "requant1": {
+        "real_multiplier": 0.005755302666706146,
+        "multiplier": 6179709,
+        "shift": 30
+    },
+    "requant2": {
+        "real_multiplier": 0.008400379418284226,
+        "multiplier": 9019839,
+        "shift": 30
+    },
+    "fp32_accuracy": 0.9181636726546906,
+    "int8_accuracy": 0.9121756487025948,
+    "fp32_macro_f1": 0.8834360621198862,
+    "int8_macro_f1": 0.8747395759550457,
+    "prediction_agreement": 0.9940119760479041
+}

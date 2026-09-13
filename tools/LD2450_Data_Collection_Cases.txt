@@ -1,0 +1,428 @@
+KẾ HOẠCH CÁC CASE THU DATA CHO LD2450
+Đề tài: Phân loại hành vi chuyển động bằng MLP trên FPGA Tang Nano 20K
+
+============================================================
+1. MỤC TIÊU DATASET
+============================================================
+
+Dataset giai đoạn đầu dùng 3 class chính:
+
+Class 0: STILL
+- Đứng yên hoặc gần như đứng yên.
+
+Class 1: WALK
+- Đi bộ với tốc độ bình thường.
+
+Class 2: FAST
+- Đi nhanh / chạy nhẹ / chạy.
+
+Lưu ý:
+- APPROACH, AWAY, L2R, R2L, DIAGONAL không phải class hành vi.
+- Đây là nhãn hướng chuyển động để tránh model học nhầm hướng thành hành vi.
+- Mỗi class WALK và FAST phải được thu ở nhiều hướng tương tự nhau.
+
+Khuyến nghị giai đoạn đầu:
+- Chỉ có 1 người trong vùng radar.
+- Chưa thu nhiều người cùng lúc.
+- Chưa thu các tình huống crossing/occlusion cho tới khi classifier đơn mục tiêu hoạt động ổn định.
+
+
+============================================================
+2. QUY ƯỚC HƯỚNG
+============================================================
+
+APPROACH
+- Người đi từ xa về phía radar.
+
+AWAY
+- Người đi từ gần radar ra xa radar.
+
+L2R
+- Người đi từ trái sang phải.
+
+R2L
+- Người đi từ phải sang trái.
+
+DIAG_L
+- Người đi chéo theo hướng bên trái.
+
+DIAG_R
+- Người đi chéo theo hướng bên phải.
+
+NA
+- Không có hướng rõ ràng, dùng cho STILL.
+
+
+============================================================
+3. CASE STILL
+============================================================
+
+Mục tiêu:
+- Thu đặc trưng khi người gần như đứng yên.
+- Không yêu cầu đứng bất động tuyệt đối.
+- Cho phép thở, hơi dịch chuyển trọng tâm và cử động nhỏ tự nhiên.
+
+CASE STILL-01
+- Activity: STILL
+- Direction: NA
+- Vị trí: X = 0 m, Y = 1.5 m
+- Thời gian ACTIVE: 10-15 s
+- Repetition: 3 lần
+
+CASE STILL-02
+- Activity: STILL
+- Direction: NA
+- Vị trí: X = 0 m, Y = 3.0 m
+- Thời gian ACTIVE: 10-15 s
+- Repetition: 3 lần
+
+CASE STILL-03
+- Activity: STILL
+- Direction: NA
+- Vị trí: X = 0 m, Y = 4.5 m
+- Thời gian ACTIVE: 10-15 s
+- Repetition: 3 lần
+
+CASE STILL-04
+- Activity: STILL
+- Direction: NA
+- Vị trí: X = -1.0 m, Y = 3.0 m
+- Thời gian ACTIVE: 10-15 s
+- Repetition: 3 lần
+
+CASE STILL-05
+- Activity: STILL
+- Direction: NA
+- Vị trí: X = +1.0 m, Y = 3.0 m
+- Thời gian ACTIVE: 10-15 s
+- Repetition: 3 lần
+
+CASE STILL-06
+- Activity: STILL
+- Direction: NA
+- Vị trí: X = -1.0 m, Y = 4.5 m
+- Thời gian ACTIVE: 10-15 s
+- Repetition: 3 lần
+
+CASE STILL-07
+- Activity: STILL
+- Direction: NA
+- Vị trí: X = +1.0 m, Y = 4.5 m
+- Thời gian ACTIVE: 10-15 s
+- Repetition: 3 lần
+
+
+============================================================
+4. CASE WALK
+============================================================
+
+Mục tiêu:
+- Thu chuyển động đi bộ bình thường ở nhiều hướng khác nhau.
+
+CASE WALK-01
+- Activity: WALK
+- Direction: APPROACH
+- Quỹ đạo: từ khoảng Y = 5 m về Y = 1 m
+- X gần 0
+- Repetition: 3 lần
+
+CASE WALK-02
+- Activity: WALK
+- Direction: AWAY
+- Quỹ đạo: từ khoảng Y = 1 m ra Y = 5 m
+- X gần 0
+- Repetition: 3 lần
+
+CASE WALK-03
+- Activity: WALK
+- Direction: L2R
+- Quỹ đạo: từ X âm sang X dương
+- Y cố định khoảng 3 m
+- Repetition: 3 lần
+
+CASE WALK-04
+- Activity: WALK
+- Direction: R2L
+- Quỹ đạo: từ X dương sang X âm
+- Y cố định khoảng 3 m
+- Repetition: 3 lần
+
+CASE WALK-05
+- Activity: WALK
+- Direction: DIAG_L
+- Quỹ đạo: đi chéo qua vùng quan sát theo phía trái
+- Repetition: 3 lần
+
+CASE WALK-06
+- Activity: WALK
+- Direction: DIAG_R
+- Quỹ đạo: đi chéo qua vùng quan sát theo phía phải
+- Repetition: 3 lần
+
+
+============================================================
+5. CASE FAST
+============================================================
+
+Mục tiêu:
+- Thu chuyển động nhanh hơn WALK.
+- Tốc độ phải khác rõ với đi bộ bình thường.
+- Nên giữ các hướng giống WALK để model học hành vi thay vì học hướng.
+
+CASE FAST-01
+- Activity: FAST
+- Direction: APPROACH
+- Quỹ đạo: từ khoảng Y = 5 m về Y = 1 m
+- Repetition: 3 lần
+
+CASE FAST-02
+- Activity: FAST
+- Direction: AWAY
+- Quỹ đạo: từ khoảng Y = 1 m ra Y = 5 m
+- Repetition: 3 lần
+
+CASE FAST-03
+- Activity: FAST
+- Direction: L2R
+- Quỹ đạo: từ trái sang phải tại Y khoảng 3 m
+- Repetition: 3 lần
+
+CASE FAST-04
+- Activity: FAST
+- Direction: R2L
+- Quỹ đạo: từ phải sang trái tại Y khoảng 3 m
+- Repetition: 3 lần
+
+CASE FAST-05
+- Activity: FAST
+- Direction: DIAG_L
+- Quỹ đạo: đi/chạy nhanh theo đường chéo phía trái
+- Repetition: 3 lần
+
+CASE FAST-06
+- Activity: FAST
+- Direction: DIAG_R
+- Quỹ đạo: đi/chạy nhanh theo đường chéo phía phải
+- Repetition: 3 lần
+
+
+============================================================
+6. CASE CHUYỂN TIẾP - KHÔNG DÙNG TRAIN BASELINE
+============================================================
+
+Các đoạn sau nên được lưu raw nhưng gán nhãn TRANSITION:
+
+TRANSITION-01
+- Đứng yên -> bắt đầu đi.
+
+TRANSITION-02
+- Đi -> dừng lại.
+
+TRANSITION-03
+- Đi -> chạy.
+
+TRANSITION-04
+- Chạy -> đi.
+
+TRANSITION-05
+- Quay đầu.
+
+TRANSITION-06
+- Thay đổi hướng đột ngột.
+
+Giai đoạn đầu:
+- Không dùng các sample TRANSITION để train 3 class STILL/WALK/FAST.
+- Chỉ giữ lại để nghiên cứu về sau.
+
+
+============================================================
+7. THỜI GIAN MỘT LẦN THU
+============================================================
+
+Khuyến nghị mỗi repetition:
+
+PRE:
+- 2 giây
+- Người chuẩn bị.
+- Label = TRANSITION
+
+ACTIVE:
+- 10 giây
+- Thực hiện đúng hành vi cần thu.
+- Label = STILL / WALK / FAST
+
+POST:
+- 2 giây
+- Kết thúc hành vi.
+- Label = TRANSITION
+
+Tổng thời gian:
+- Khoảng 14 giây / repetition
+
+
+============================================================
+8. SỐ NGƯỜI THỬ
+============================================================
+
+Pilot:
+- 3 người.
+- Dùng để kiểm tra code, parser, hướng X/Y, speed và pipeline preprocessing.
+
+Dataset chính:
+- Khuyến nghị 8-12 người.
+
+Mỗi người dùng ID ẩn danh:
+- P01
+- P02
+- P03
+- ...
+- Không cần lưu tên thật.
+
+
+============================================================
+9. SỐ LƯỢNG SESSION GỢI Ý
+============================================================
+
+Mỗi người:
+
+STILL:
+- 7 vị trí x 3 repetition
+- Tổng: 21 repetition
+
+WALK:
+- 6 hướng x 3 repetition
+- Tổng: 18 repetition
+
+FAST:
+- 6 hướng x 3 repetition
+- Tổng: 18 repetition
+
+Tổng mỗi người:
+- 57 repetition
+
+Nếu mỗi repetition có 10 giây ACTIVE:
+- 57 x 10 s = 570 s ACTIVE
+- Khoảng 9.5 phút dữ liệu thực / người
+- Chưa tính thời gian chuẩn bị và di chuyển vị trí
+
+
+============================================================
+10. THỨ TỰ THU DATA KHUYẾN NGHỊ
+============================================================
+
+Không nên thu toàn bộ ngay từ đầu.
+
+Giai đoạn A - Kiểm tra cảm biến
+1. P01 STILL tại 2 m
+2. P01 WALK APPROACH
+3. P01 WALK L2R
+
+Kiểm tra:
+- X đúng dấu hay không.
+- Y đúng khoảng cách hay không.
+- Speed có thay đổi hợp lý hay không.
+- Frame rate khoảng 10 Hz.
+- Có bị mất frame hay không.
+
+Giai đoạn B - Pilot dataset
+1. 3 người
+2. Thu đầy đủ STILL / WALK / FAST
+3. Mỗi case 2-3 repetition
+
+Sau đó:
+- Plot X(t)
+- Plot Y(t)
+- Plot Speed(t)
+- Plot quỹ đạo X-Y
+- Kiểm tra dữ liệu trước khi thu nhiều người.
+
+Giai đoạn C - Dataset chính
+- 8-12 người.
+- Thu theo toàn bộ bảng case trong file này.
+
+
+============================================================
+11. QUY TẮC QUAN TRỌNG KHI THU
+============================================================
+
+1. Giữ radar cố định trong cùng một experiment.
+2. Không thay đổi góc radar tùy ý giữa các repetition.
+3. Không để người khác đi vào vùng radar trong dataset đơn mục tiêu.
+4. Mỗi repetition chỉ nên có một hành vi chính.
+5. WALK và FAST phải có cùng tập hướng.
+6. Không dùng random frame split để chia train/test.
+7. Train/validation/test nên chia theo SUBJECT hoặc SESSION.
+8. Giữ raw data gốc, không overwrite.
+9. Không tính feature ngay lúc thu nếu không cần thiết.
+10. X, Y, speed, resolution và timestamp phải được lưu đầy đủ.
+
+
+============================================================
+12. TÊN FILE GỢI Ý
+============================================================
+
+Format:
+
+YYYYMMDD_HHMMSS_SUBJECT_ACTIVITY_DIRECTION_SCENARIO_REPETITION.csv
+
+Ví dụ:
+
+20260907_140000_P01_STILL_NA_S001_R01.csv
+
+20260907_141000_P01_WALK_APPROACH_S001_R01.csv
+
+20260907_142000_P01_WALK_L2R_S001_R01.csv
+
+20260907_143000_P01_FAST_AWAY_S001_R01.csv
+
+
+============================================================
+13. CHECKLIST TỐI THIỂU TRƯỚC KHI THU DATASET CHÍNH
+============================================================
+
+[ ] ESP32 nhận được frame LD2450 ổn định.
+[ ] Frame rate xấp xỉ 10 Hz.
+[ ] Không có malformed frame.
+[ ] Không có frame ID gap đáng kể.
+[ ] X thay đổi đúng khi đi trái/phải.
+[ ] Y thay đổi đúng khi tiến/lùi.
+[ ] Speed thay đổi hợp lý.
+[ ] CSV được lưu đúng.
+[ ] Mỗi file có subject/activity/direction rõ ràng.
+[ ] Có thể plot lại trajectory từ CSV.
+
+
+============================================================
+14. GIAI ĐOẠN MỞ RỘNG SAU KHI BASELINE HOẠT ĐỘNG
+============================================================
+
+Chỉ thực hiện sau khi classifier đơn mục tiêu ổn định:
+
+MULTI-01
+- 2 người cùng đứng.
+
+MULTI-02
+- 1 người đứng + 1 người đi.
+
+MULTI-03
+- 2 người đi cùng hướng.
+
+MULTI-04
+- 2 người đi ngược hướng.
+
+MULTI-05
+- 2 người cắt nhau.
+
+MULTI-06
+- Một target biến mất rồi xuất hiện lại.
+
+MULTI-07
+- 3 target đồng thời.
+
+Các case này dùng để kiểm tra:
+- Tracking.
+- Target association.
+- Track ID.
+- Khả năng classifier hoạt động độc lập trên từng target.
+
+Không nên dùng các case multi-target làm dataset đầu tiên của MLP.
