@@ -3,27 +3,30 @@ import csv
 import time
 from datetime import datetime
 from pathlib import Path
-# Config
-PORT = "COM3"
+
+
+
+PORT = "COM6"
 BAUD = 115200
 
 # ----- Thông tin case thu -----
 
-ACTIVITY = "WALK"          # STILL / WALK / FAST
-DIRECTION = "APPROACH"     # NA / APPROACH / AWAY / L2R / R2L / DIAG_L / DIAG_R
+ACTIVITY = "FAST"          # STILL / WALK / FAST
+DIRECTION = "AWAY"     # NA / APPROACH / AWAY 
 
-PEOPLE_COUNT = 3           # 1 / 2 / 3 người
+PEOPLE_COUNT = 2          # 1 / 2 / 3 người
 
 # ID người tham gia trong session
 # Ví dụ:
 # 1 người: ["P01"]
 # 2 người: ["P01", "P02"]
 # 3 người: ["P01", "P02", "P03"]
-PARTICIPANTS = ["P01", "P02", "P03"]
 
-# Mỗi file nên thu liên tục khoảng 30-60 giây
-RECORD_TIME = 60           # giây
-COUNTDOWN = 3              # đếm ngược trước khi thu
+
+PARTICIPANTS = ["P01", "P02"]
+
+RECORD_TIME = 60    # giây
+COUNTDOWN = 10             # đếm ngược trước khi thu
 
 ENVIRONMENT = "LAB01"
 
@@ -38,10 +41,7 @@ HEADER = bytes.fromhex("AA FF 03 00")
 TAIL = bytes.fromhex("55 CC")
 FRAME_SIZE = 30
 
-
-# =========================================================
-# HÀM DECODE LD2450
-# =========================================================
+# DECODE LD2450
 
 def decode_signed(lo, hi):
     """
@@ -132,10 +132,6 @@ def parse_esp32_line(line):
 
     return frame_id, esp_time_us, frame
 
-
-# =========================================================
-# KIỂM TRA CẤU HÌNH
-# =========================================================
 
 def check_config():
 
