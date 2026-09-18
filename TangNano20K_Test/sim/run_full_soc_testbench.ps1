@@ -1,3 +1,5 @@
+param([switch]$WaveOnly)
+
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
@@ -61,9 +63,22 @@ try {
             throw "Icarus compilation failed with exit code $LASTEXITCODE."
         }
 
-        & $vvp .\soc_tb.vvp
-        if ($LASTEXITCODE -ne 0) {
-            throw "SoC simulation failed with exit code $LASTEXITCODE."
+        $vvpArgs = @('.\soc_tb.vvp')
+        if ($WaveOnly) {
+            $vvpArgs += '+WAVE_ONLY'
+        }
+
+        & $vvp @vvpArgs
+        $simulationExitCode = $LASTEXITCODE
+
+        if ($WaveOnly -and (Test-Path -LiteralPath '.\picorv32_ld2450_soc_tb.vcd')) {
+            Copy-Item -LiteralPath '.\picorv32_ld2450_soc_tb.vcd' `
+                -Destination (Join-Path $projectRoot 'sim\picorv32_ld2450_soc_tb.vcd') `
+                -Force
+        }
+
+        if ($simulationExitCode -ne 0) {
+            throw "SoC simulation failed with exit code $simulationExitCode."
         }
     } finally {
         Pop-Location

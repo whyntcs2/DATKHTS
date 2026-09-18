@@ -75,9 +75,9 @@ LIBS = -lgcc
 endif
 
 # khai báo danh sách các file source .c cần biên dịch và gộp lại
-COMMON_CSRCS = main.c countdown_timer.c uart.c leds.c sd_card_cgpt.c i2c.c oled.c
+COMMON_CSRCS = main.c countdown_timer.c uart.c leds.c sd_card_cgpt.c i2c.c
 
-NANO20K_CSRCS = ws2812b.c ld2450.c kalman.c motion_features.c
+NANO20K_CSRCS = ws2812b.c ld2450.c kalman.c target_tracking.c motion_features.c
 ALL_CSRCS = $(COMMON_CSRCS) $(NANO20K_CSRCS)
 
 %.o: %.c

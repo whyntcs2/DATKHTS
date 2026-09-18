@@ -9,11 +9,11 @@
 #include "countdown_timer.h"
 #include "readtime.h"
 #include "sd_card_cgpt.h"
-#include "oled.h"
 #include "ws2812b.h"
 #include "ld2450.h"
 #include "kalman.h"
 #include "motion_features.h"
+#include "target_tracking.h"
 
 extern uint32_t timer_instr(uint32_t val);   /* from startup.S */
 extern uint32_t maskirq_instr(uint32_t val); /* from startup.S */
@@ -23,7 +23,7 @@ uint32_t illegal_irq_count;
 uint32_t buserr_irq_count;
 uint32_t irq3_count;
 
-#define MEMSIZE 512
+#define MEMSIZE 128
 uint32_t mem[MEMSIZE];
 uint32_t test_vals[] = {0, 0xffffffff, 0xaaaaaaaa, 0x55555555, 0xdeadbeef};
 
@@ -562,19 +562,16 @@ void parse(char *buf, uint32_t len)
 
 #define BUFLEN 64
 
-/* Initial Kalman tuning values. r_x and r_y are variances in mm^2. */
-#define KALMAN_DEFAULT_DT           0.1f
-#define KALMAN_SIGMA_A_MM_S2     1000.0f
-#define KALMAN_R_X_MM2           2500.0f
-#define KALMAN_R_Y_MM2           2500.0f
-#define MAX_MISSED_FRAMES             5
-
 #ifndef DEBUG_KALMAN
 #define DEBUG_KALMAN                  0
 #endif
 
-#ifndef DEBUG_AI_FEATURE
-#define DEBUG_AI_FEATURE              0
+#ifndef DEBUG_TRACK_STATUS
+#define DEBUG_TRACK_STATUS            0
+#endif
+
+#ifndef DEBUG_AI_INPUT
+#define DEBUG_AI_INPUT                1
 #endif
 
 static void uart_print_unsigned_decimal(uint32_t value)
@@ -591,6 +588,7 @@ static void uart_print_unsigned_decimal(uint32_t value)
     uart_putchar(digits[--count]);
 }
 
+#if DEBUG_TRACK_STATUS
 static void uart_print_fixed_3(float value)
 {
   uint32_t scaled;
@@ -633,6 +631,7 @@ static void uart_print_signed_fixed_1(float value)
   uart_putchar('.');
   uart_putchar('0' + (scaled % 10u));
 }
+#endif
 
 static void uart_print_signed_decimal(int32_t value)
 {
@@ -644,76 +643,76 @@ static void uart_print_signed_decimal(int32_t value)
   uart_print_unsigned_decimal((uint32_t)value);
 }
 
-static void update_kalman_tracks(const ld2450_frame_t *frame,
-                                 KalmanTrack tracks[LD2450_TARGET_COUNT])
+static float elapsed_seconds(uint32_t now, uint32_t previous)
 {
-  uint32_t i;
-  uint32_t detected_mask = 0;
-
-  /*
-   * Temporary slot mapping only: LD2450 T1/T2/T3 maps to tracks[0/1/2].
-   * Add data association later because radar slots are not persistent IDs.
-   */
-  for (i = 0; i < LD2450_TARGET_COUNT; i++) {
-    if (frame->target[i].valid) {
-      detected_mask |= 1u << i;
-
-      if (!tracks[i].initialized) {
-        Kalman_Init(&tracks[i],
-                    (float)frame->target[i].x_mm,
-                    (float)frame->target[i].y_mm,
-                    KALMAN_DEFAULT_DT,
-                    KALMAN_SIGMA_A_MM_S2,
-                    KALMAN_R_X_MM2,
-                    KALMAN_R_Y_MM2);
-      } else {
-        Kalman_Predict(&tracks[i]);
-        Kalman_Update(&tracks[i],
-                      (float)frame->target[i].x_mm,
-                      (float)frame->target[i].y_mm);
-      }
-
-      tracks[i].active = 1;
-      tracks[i].missed_frames = 0;
-    } else if (tracks[i].initialized) {
-      Kalman_Predict(&tracks[i]);
-      if (tracks[i].missed_frames != 0xffu)
-        tracks[i].missed_frames++;
-
-      if (tracks[i].missed_frames > MAX_MISSED_FRAMES)
-        Kalman_Reset(&tracks[i]);
-    }
-  }
-
-  set_leds(detected_mask);
+  return (float)(uint32_t)(now - previous) / (float)CLK_FREQ;
 }
 
-static void update_motion_outputs(
+static uint8_t update_motion_outputs(
+    const ld2450_frame_t *frame,
+    const TrackingResult *tracking,
     const KalmanTrack tracks[LD2450_TARGET_COUNT],
     TargetFeatureState feature_state[LD2450_TARGET_COUNT],
-    AI_Features ai_features[LD2450_TARGET_COUNT],
+    int8_t ai_input[LD2450_TARGET_COUNT][AI_FEATURE_COUNT],
+    uint32_t measurement_time[LD2450_TARGET_COUNT],
+    uint8_t measurement_time_valid[LD2450_TARGET_COUNT],
+    uint32_t now,
     TargetUIData ui_targets[LD2450_TARGET_COUNT])
 {
+  AI_Features features;
+  float normalized[AI_FEATURE_COUNT];
   uint32_t i;
+  uint8_t generated_mask = 0u;
 
   for (i = 0; i < LD2450_TARGET_COUNT; i++) {
+    int32_t detection = tracking->detection_for_track[i];
+
+    if (tracking->reset_mask & (1u << i)) {
+      Feature_Reset(&feature_state[i]);
+      measurement_time_valid[i] = 0u;
+    }
+
     if (!tracks[i].active) {
       Feature_Reset(&feature_state[i]);
-      AI_Features_Reset(&ai_features[i]);
       TargetUI_Reset(&ui_targets[i]);
+      measurement_time_valid[i] = 0u;
       continue;
     }
 
-    Feature_Update(&feature_state[i], &tracks[i], &ai_features[i],
-                   tracks[i].dt);
     TargetUI_Update(&ui_targets[i], &tracks[i]);
+
+    if (detection >= 0) {
+      float dt = 0.0f;
+
+      if (tracking->created_mask & (1u << i)) {
+        Feature_Reset(&feature_state[i]);
+        measurement_time_valid[i] = 0u;
+      }
+      if (measurement_time_valid[i])
+        dt = elapsed_seconds(now, measurement_time[i]);
+
+      /* Use associated raw measurement: this matches 01_preprocess.py. */
+      if (AI_Pipeline_Push(&feature_state[i],
+                           (float)frame->target[detection].x_mm,
+                           (float)frame->target[detection].y_mm,
+                           dt,
+                           &features,
+                           normalized,
+                           ai_input[i]))
+        generated_mask |= 1u << i;
+
+      measurement_time[i] = now;
+      measurement_time_valid[i] = 1u;
+    }
   }
+
+  return generated_mask;
 }
 
+#if DEBUG_TRACK_STATUS
 static void print_kalman_tracks(
     const ld2450_frame_t *frame,
     const KalmanTrack tracks[LD2450_TARGET_COUNT],
-    const AI_Features ai_features[LD2450_TARGET_COUNT],
     const TargetUIData ui_targets[LD2450_TARGET_COUNT])
 {
   uint32_t i;
@@ -748,26 +747,6 @@ static void print_kalman_tracks(
     }
 #endif
 
-#if DEBUG_AI_FEATURE
-    if (tracks[i].active) {
-      uart_puts("T");
-      uart_putchar('1' + i);
-      uart_puts(" AI[dx=");
-      uart_print_signed_fixed_3(ai_features[i].delta_x);
-      uart_puts(",dy=");
-      uart_print_signed_fixed_3(ai_features[i].delta_y);
-      uart_puts(",vx=");
-      uart_print_signed_fixed_3(ai_features[i].vx);
-      uart_puts(",vy=");
-      uart_print_signed_fixed_3(ai_features[i].vy);
-      uart_puts(",ax=");
-      uart_print_signed_fixed_3(ai_features[i].ax);
-      uart_puts(",ay=");
-      uart_print_signed_fixed_3(ai_features[i].ay);
-      uart_puts("]\r\n");
-    }
-#endif
-
     uart_puts("T");
     uart_putchar('1' + i);
     uart_puts(": ");
@@ -789,31 +768,57 @@ static void print_kalman_tracks(
     uart_puts("\r\n");
   }
 }
+#endif
+
+static void print_ai_inputs(
+    uint8_t generated_mask,
+    const int8_t ai_input[LD2450_TARGET_COUNT][AI_FEATURE_COUNT])
+{
+#if DEBUG_AI_INPUT
+  uint32_t track;
+
+  for (track = 0; track < LD2450_TARGET_COUNT; track++) {
+    uint32_t feature;
+
+    if (!(generated_mask & (1u << track)))
+      continue;
+    uart_puts("TRACK ");
+    uart_putchar('0' + track);
+    uart_puts(" AI_INPUT: ");
+    for (feature = 0; feature < AI_FEATURE_COUNT; feature++) {
+      if (feature != 0u)
+        uart_puts(", ");
+      uart_print_signed_decimal((int32_t)ai_input[track][feature]);
+    }
+    uart_puts("\r\n");
+  }
+#else
+  (void)generated_mask;
+  (void)ai_input;
+#endif
+}
 
 int main()
 {
     ld2450_frame_t frame;
     KalmanTrack tracks[LD2450_TARGET_COUNT];
     TargetFeatureState feature_state[LD2450_TARGET_COUNT];
-    AI_Features ai_features[LD2450_TARGET_COUNT];
+    int8_t ai_input[LD2450_TARGET_COUNT][AI_FEATURE_COUNT];
     TargetUIData ui_targets[LD2450_TARGET_COUNT];
+    uint32_t measurement_time[LD2450_TARGET_COUNT] = {0};
+    uint8_t measurement_time_valid[LD2450_TARGET_COUNT] = {0};
+    uint32_t previous_frame_time = 0u;
+    uint8_t frame_time_valid = 0u;
     uint32_t i;
 
     for (i = 0; i < LD2450_TARGET_COUNT; i++) {
         Kalman_Reset(&tracks[i]);
         Feature_Reset(&feature_state[i]);
-        AI_Features_Reset(&ai_features[i]);
         TargetUI_Reset(&ui_targets[i]);
     }
 
     uart_set_div((CLK_FREQ + 57600) / 115200 - 2);
     set_leds(0);
-
-    /* Show the startup logos without blocking LD2450 processing afterwards. */
-    oled_init();
-    oled_show_ptit_logo();
-    cdt_delay(2 * CLK_FREQ);
-    oled_show_fee_logo();
 
     uart_puts("\r\nPicoRV32 LD2450 three-target reader\r\n");
     uart_puts("Configuring LD2450 multi-target mode... ");
@@ -825,10 +830,23 @@ int main()
     uart_puts("Waiting for 30-byte target frames...\r\n");
     while (1) {
         if (ld2450_read_frame(&frame)) {
-            update_kalman_tracks(&frame, tracks);
-            update_motion_outputs(tracks, feature_state, ai_features,
-                                  ui_targets);
-            print_kalman_tracks(&frame, tracks, ai_features, ui_targets);
+            TrackingResult tracking;
+            uint32_t now = readtime();
+            float frame_dt = frame_time_valid ?
+                elapsed_seconds(now, previous_frame_time) : 0.1f;
+            uint8_t generated_mask;
+
+            Tracking_Update(&frame, tracks, frame_dt, &tracking);
+            set_leds(tracking.matched_mask);
+            generated_mask = update_motion_outputs(
+                &frame, &tracking, tracks, feature_state, ai_input, measurement_time,
+                measurement_time_valid, now, ui_targets);
+#if DEBUG_TRACK_STATUS
+            print_kalman_tracks(&frame, tracks, ui_targets);
+#endif
+            print_ai_inputs(generated_mask, ai_input);
+            previous_frame_time = now;
+            frame_time_valid = 1u;
         }
     }
     return 0;

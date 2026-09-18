@@ -1,0 +1,13 @@
+BEGIN 1:top:fast:work
+    mem_ready :  1:picorv32_ld2450_soc_tb:fast:work
+    mem_valid :  1:picorv32_ld2450_soc_tb:fast:work
+    reset_n :  1:picorv32_ld2450_soc_tb:fast:work
+    mem_wdata :  1:picorv32_ld2450_soc_tb:fast:work
+    mem_wstrb :  1:picorv32_ld2450_soc_tb:fast:work
+    mem_rdata :  1:picorv32_ld2450_soc_tb:fast:work
+    mem_addr :  1:picorv32_ld2450_soc_tb:fast:work
+    mem_instr :  1:picorv32_ld2450_soc_tb:fast:work
+END 
+BEGIN 1:tang_leds:fast:work
+    leds_data_o :  1:picorv32_ld2450_soc_tb:fast:work
+END 

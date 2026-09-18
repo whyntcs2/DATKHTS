@@ -1,9 +1,9 @@
--d C:\Users\Mr T\Desktop\TangNano20K_Test\impl\gwsynthesis\picorv32_20k.vg
+-d D:\DATKHTS\TangNano20K_Test\impl\gwsynthesis\picorv32_20k.vg
 -p GW2AR-18C-QFN88-8
 -pn GW2AR-LV18QN88C8/I7
--cst C:\Users\Mr T\Desktop\TangNano20K_Test\src\picorv32_20k.cst
--cfg C:\Users\Mr T\Desktop\TangNano20K_Test\impl\pnr\device.cfg
--sdc C:\Users\Mr T\Desktop\TangNano20K_Test\src\picorv32_20k.sdc
+-cst D:\DATKHTS\TangNano20K_Test\src\picorv32_20k.cst
+-cfg D:\DATKHTS\TangNano20K_Test\impl\pnr\device.cfg
+-sdc D:\DATKHTS\TangNano20K_Test\src\picorv32_20k.sdc
 -bit
 -tr
 -ph

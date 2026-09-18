@@ -38,8 +38,8 @@ module top (
             output wire       sd_clk,
             input wire        uart_rx,
             output wire       uart_tx,
-            output wire       oled_scl,
-            inout  wire       oled_sda,
+            output wire       i2c_scl,
+            inout  wire       i2c_sda,
 `ifdef USE_LA
             output wire       clk_out,
             output wire       mem_instr, 
@@ -58,6 +58,9 @@ module top (
             output wire [5:0] leds
             );
 
+   // This include gets SRAM_ADDR_WIDTH from software build process
+   `include "sys_parameters.v"
+
    parameter BARREL_SHIFTER = 0;
    parameter ENABLE_MUL = 0;
    parameter ENABLE_DIV = 0;
@@ -72,9 +75,6 @@ module top (
    parameter [31:0] STACKADDR = (MEMBYTES);         // Grows down.  Software should set it.
    parameter [31:0] PROGADDR_RESET = 32'h0000_0000;
    parameter [31:0] PROGADDR_IRQ = 32'h0000_0010;
-
-   // This include gets SRAM_ADDR_WIDTH from software build process
-   `include "sys_parameters.v"
 
    wire                       clk;
    wire                       reset_n; 
@@ -121,9 +121,9 @@ module top (
     assign i2c_sel = mem_valid &&
                  (mem_addr >= 32'h80000040) &&
                  (mem_addr <= 32'h8000006C);
-    assign oled_scl = i2c_scl_oe ? 1'b0 : 1'bz;
-    assign oled_sda = i2c_sda_oe ? 1'b0 : 1'bz;
-    assign i2c_sda_in = oled_sda;
+    assign i2c_scl = i2c_scl_oe ? 1'b0 : 1'bz;
+    assign i2c_sda = i2c_sda_oe ? 1'b0 : 1'bz;
+    assign i2c_sda_in = i2c_sda;
 `ifdef USE_LA
    // Assigns for external logic analyzer connction
    assign clk_out = clk;

@@ -1,7 +1,7 @@
-Reading netlist file: "C:\Users\Mr T\Desktop\TangNano20K_Test\impl\gwsynthesis\picorv32_20k.vg"
-Parsing netlist file "C:\Users\Mr T\Desktop\TangNano20K_Test\impl\gwsynthesis\picorv32_20k.vg" completed
+Reading netlist file: "D:\DATKHTS\TangNano20K_Test\impl\gwsynthesis\picorv32_20k.vg"
+Parsing netlist file "D:\DATKHTS\TangNano20K_Test\impl\gwsynthesis\picorv32_20k.vg" completed
 Processing netlist completed
-Reading constraint file: "C:\Users\Mr T\Desktop\TangNano20K_Test\src\picorv32_20k.cst"
+Reading constraint file: "D:\DATKHTS\TangNano20K_Test\src\picorv32_20k.cst"
 Physical Constraint parsed completed
 Running placement......
 [10%] Placement Phase 0 completed
@@ -21,10 +21,10 @@ Bitstream generation in progress......
 Bitstream generation completed
 Running power analysis......
 [100%] Power analysis completed
-Generate file "C:\Users\Mr T\Desktop\TangNano20K_Test\impl\pnr\picorv32_20k.power.html" completed
-Generate file "C:\Users\Mr T\Desktop\TangNano20K_Test\impl\pnr\picorv32_20k.pin.html" completed
-Generate file "C:\Users\Mr T\Desktop\TangNano20K_Test\impl\pnr\picorv32_20k.rpt.html" completed
-Generate file "C:\Users\Mr T\Desktop\TangNano20K_Test\impl\pnr\picorv32_20k.rpt.txt" completed
-Generate file "C:\Users\Mr T\Desktop\TangNano20K_Test\impl\pnr\picorv32_20k.tr.html" completed
-Tue Aug 18 09:24:31 2026
+Generate file "D:\DATKHTS\TangNano20K_Test\impl\pnr\picorv32_20k.power.html" completed
+Generate file "D:\DATKHTS\TangNano20K_Test\impl\pnr\picorv32_20k.pin.html" completed
+Generate file "D:\DATKHTS\TangNano20K_Test\impl\pnr\picorv32_20k.rpt.html" completed
+Generate file "D:\DATKHTS\TangNano20K_Test\impl\pnr\picorv32_20k.rpt.txt" completed
+Generate file "D:\DATKHTS\TangNano20K_Test\impl\pnr\picorv32_20k.tr.html" completed
+Mon Sep 14 15:56:19 2026
 

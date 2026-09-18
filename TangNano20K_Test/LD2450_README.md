@@ -89,8 +89,8 @@ và xem thông báo khởi động.
 | UART debug RX | `uart_rx` | 70 | Nối nội bộ với USB-UART |
 | LD2450 RX của FPGA | `radar_rx` | 73 | Header trái, chân trên cùng |
 | LD2450 TX của FPGA | `radar_tx` | 74 | Header trái, chân thứ hai |
-| OLED SCL | `oled_scl` | 29 | Header trái |
-| OLED SDA | `oled_sda` | 30 | Header trái |
+| I2C SCL | `i2c_scl` | 29 | Header trái |
+| I2C SDA | `i2c_sda` | 30 | Header trái |
 | WS2812 | `ws2812b_din` | 79 | LED RGB có sẵn trên board |
 | SD clock | `sd_clk` | 83 | Khe thẻ TF có sẵn |
 | SD MOSI | `sd_mosi` | 82 | Khe thẻ TF có sẵn |

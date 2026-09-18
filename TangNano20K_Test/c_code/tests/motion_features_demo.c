@@ -1,12 +1,12 @@
 #include <stdio.h>
 
 #include "../motion_features.h"
+#include "../target_tracking.h"
 
 static int check(int condition, const char *message)
 {
     if (condition)
         return 1;
-
     printf("FAIL: %s\n", message);
     return 0;
 }
@@ -20,108 +20,210 @@ static int near(float value, float expected, float tolerance)
     return difference <= tolerance;
 }
 
-int main(void)
+static int test_feature_formulas(void)
 {
-    KalmanTrack tracks[3] = {{0}};
-    TargetFeatureState states[3];
-    AI_Features features[3];
-    TargetUIData ui;
-    float input[AI_FEATURE_COUNT];
+    TargetFeatureState state = {0};
+    AI_Features features;
     uint32_t i;
     int passed = 1;
 
-    for (i = 0; i < 3; i++) {
-        Feature_Reset(&states[i]);
-        AI_Features_Reset(&features[i]);
-        tracks[i].active = 1;
-        tracks[i].initialized = 1;
-        tracks[i].dt = 0.1f;
+    state.window_count = AI_WINDOW_FRAMES;
+    for (i = 0; i < AI_WINDOW_FRAMES; i++) {
+        state.window[i].x = (float)i;
+        state.window[i].y = 0.0f;
+        state.window[i].vx = (float)i;
+        state.window[i].vy = -(float)i;
+        state.window[i].speed = (float)i;
+        state.window[i].accel = -(float)i;
+        state.window[i].dt_valid = 1u;
     }
 
-    tracks[0].x = 100.0f;
-    tracks[0].y = 200.0f;
-    tracks[0].vx = 10.0f;
-    tracks[0].vy = -20.0f;
-    Feature_Update(&states[0], &tracks[0], &features[0], tracks[0].dt);
-    passed &= check(near(features[0].delta_x, 0.0f, 0.001f),
-                    "first delta X must be zero");
-    passed &= check(near(features[0].ax, 0.0f, 0.001f),
-                    "first acceleration X must be zero");
+    passed &= check(AI_ExtractFeatures(&state, &features),
+                    "full valid window must produce features");
+    passed &= check(near(features.value[AI_FEATURE_DX_MM], 9.0f, 0.0001f),
+                    "dx");
+    passed &= check(near(features.value[AI_FEATURE_DY_MM], 0.0f, 0.0001f),
+                    "dy");
+    passed &= check(near(features.value[AI_FEATURE_MEAN_VX_MM_S], 4.5f, 0.0001f),
+                    "mean vx");
+    passed &= check(near(features.value[AI_FEATURE_MEAN_VY_MM_S], -4.5f, 0.0001f),
+                    "mean vy");
+    passed &= check(near(features.value[AI_FEATURE_MEAN_SPEED_MM_S], 4.5f, 0.0001f),
+                    "mean speed");
+    passed &= check(near(features.value[AI_FEATURE_MEDIAN_SPEED_MM_S], 4.5f, 0.0001f),
+                    "median speed");
+    passed &= check(near(features.value[AI_FEATURE_MAX_SPEED_MM_S], 9.0f, 0.0001f),
+                    "max speed");
+    passed &= check(near(features.value[AI_FEATURE_P90_SPEED_MM_S], 8.1f, 0.0001f),
+                    "NumPy linear p90");
+    passed &= check(near(features.value[AI_FEATURE_MEAN_ACCEL_MM_S2], 4.5f, 0.0001f),
+                    "mean absolute acceleration");
+    passed &= check(near(features.value[AI_FEATURE_MEDIAN_ACCEL_MM_S2], 4.5f, 0.0001f),
+                    "median absolute acceleration");
+    passed &= check(near(features.value[AI_FEATURE_MAX_ACCEL_MM_S2], 9.0f, 0.0001f),
+                    "max absolute acceleration");
+    passed &= check(near(features.value[AI_FEATURE_STD_SPEED_MM_S], 2.8722813f, 0.0002f),
+                    "population speed standard deviation");
+    passed &= check(near(features.value[AI_FEATURE_PATH_LENGTH_MM], 9.0f, 0.0001f),
+                    "path length");
+    passed &= check(near(features.value[AI_FEATURE_NET_DISPLACEMENT_MM], 9.0f, 0.0001f),
+                    "net displacement");
+    passed &= check(near(features.value[AI_FEATURE_STRAIGHTNESS], 1.0f, 0.0001f),
+                    "straightness");
 
-    tracks[0].x = 112.0f;
-    tracks[0].y = 195.0f;
-    tracks[0].vx = 30.0f;
-    tracks[0].vy = -10.0f;
-    Feature_Update(&states[0], &tracks[0], &features[0], tracks[0].dt);
-    passed &= check(near(features[0].delta_x, 12.0f, 0.001f),
-                    "delta X must use filtered position history");
-    passed &= check(near(features[0].delta_y, -5.0f, 0.001f),
-                    "delta Y must use filtered position history");
-    passed &= check(near(features[0].ax, 200.0f, 0.001f),
-                    "acceleration X must use Kalman velocity");
-    passed &= check(near(features[0].ay, 100.0f, 0.001f),
-                    "acceleration Y must use Kalman velocity");
+    for (i = 0; i < AI_WINDOW_FRAMES; i++) {
+        state.window[i].x = 3.0f;
+        state.window[i].speed = 0.0f;
+        state.window[i].accel = 0.0f;
+    }
+    passed &= check(AI_ExtractFeatures(&state, &features),
+                    "stationary window must remain valid");
+    passed &= check(features.value[AI_FEATURE_STRAIGHTNESS] == 0.0f,
+                    "zero path must not divide by zero");
+    return passed;
+}
 
-    tracks[1].x = -500.0f;
-    tracks[1].y = 900.0f;
-    tracks[1].vx = -40.0f;
-    tracks[1].vy = 25.0f;
-    Feature_Update(&states[1], &tracks[1], &features[1], tracks[1].dt);
-    passed &= check(near(features[1].delta_x, 0.0f, 0.001f) &&
-                    near(features[1].delta_y, 0.0f, 0.001f),
-                    "each target must have independent first-sample history");
-    passed &= check(states[0].initialized && states[1].initialized &&
-                    !states[2].initialized,
-                    "three target histories must be independent");
+static int test_normalization_and_quantization(void)
+{
+    static const float mean[AI_FEATURE_COUNT] = {
+        113.54660693930299f, 98.46531904071423f,
+        138.6185028343803f, 119.56423018250211f,
+        669.2732981010357f, 673.2906700809257f,
+        847.362353115194f, 823.316435986725f,
+        564.3419670043027f, 364.56183641749146f,
+        1962.0069664568896f, 134.8163451977064f,
+        547.6355889458931f, 522.6601431850764f,
+        0.8730364471396381f
+    };
+    const float input_scale = 0.11223038626702184f;
+    AI_Features features;
+    float normalized[AI_FEATURE_COUNT];
+    int8_t input[AI_FEATURE_COUNT];
+    uint32_t i;
+    int passed = 1;
 
-    tracks[1].vx = 100.0f;
-    tracks[1].vy = 100.0f;
-    Feature_Update(&states[1], &tracks[1], &features[1], 0.0f);
-    passed &= check(near(features[1].ax, 0.0f, 0.001f) &&
-                    near(features[1].ay, 0.0f, 0.001f),
-                    "zero dt must not divide");
+    for (i = 0; i < AI_FEATURE_COUNT; i++)
+        features.value[i] = mean[i];
+    passed &= check(AI_NormalizeFeatures(&features, normalized),
+                    "normalization constants must be valid");
+    for (i = 0; i < AI_FEATURE_COUNT; i++)
+        passed &= check(normalized[i] == 0.0f, "feature mean must normalize to zero");
 
-    AI_Features_ToInput(&features[0], input);
-    passed &= check(near(input[0], features[0].delta_x, 0.001f) &&
-                    near(input[1], features[0].delta_y, 0.001f) &&
-                    near(input[2], features[0].vx, 0.001f) &&
-                    near(input[3], features[0].vy, 0.001f) &&
-                    near(input[4], features[0].ax, 0.001f) &&
-                    near(input[5], features[0].ay, 0.001f),
-                    "AI input order must be dX,dY,Vx,Vy,Ax,Ay");
+    for (i = 0; i < AI_FEATURE_COUNT; i++)
+        normalized[i] = 0.0f;
+    normalized[0] = 0.5f * input_scale;
+    normalized[1] = 1.5f * input_scale;
+    normalized[2] = 2.5f * input_scale;
+    normalized[3] = -0.5f * input_scale;
+    normalized[4] = -1.5f * input_scale;
+    normalized[5] = 1000.0f;
+    normalized[6] = -1000.0f;
+    AI_Quantize(normalized, input);
+    passed &= check(input[0] == 0 && input[1] == 2 && input[2] == 2,
+                    "positive quantization must use nearest-even");
+    passed &= check(input[3] == 0 && input[4] == -2,
+                    "negative quantization must use nearest-even");
+    passed &= check(input[5] == 127 && input[6] == -127,
+                    "quantization must saturate to symmetric INT8 range");
+    return passed;
+}
 
-    tracks[2].x = 1000.0f;
-    tracks[2].y = 1000.0f;
-    tracks[2].vx = 300.0f;
-    tracks[2].vy = 400.0f;
-    tracks[2].missed_frames = 1;
-    TargetUI_Update(&ui, &tracks[2]);
-    passed &= check(near(ui.distance_m, 1.4142f, 0.002f),
-                    "UI distance must use filtered x and y");
-    passed &= check(near(ui.speed_m_s, 0.5f, 0.002f),
-                    "UI speed must use Kalman vx and vy");
-    passed &= check(near(ui.angle_deg, 45.0f, 0.5f),
-                    "angle must be atan2(x,y) with positive X positive");
-    passed &= check(ui.valid && ui.predicted,
-                    "active missed track must be marked predicted");
+static int test_ring_and_stride(void)
+{
+    TargetFeatureState state;
+    AI_Features features;
+    float normalized[AI_FEATURE_COUNT];
+    int8_t input[AI_FEATURE_COUNT];
+    AI_TemporalSample previous;
+    AI_TemporalSample current;
+    uint32_t i;
+    uint32_t generated = 0u;
+    int passed = 1;
 
-    tracks[2].x = -1000.0f;
-    TargetUI_Update(&ui, &tracks[2]);
-    passed &= check(near(ui.angle_deg, -45.0f, 0.5f),
-                    "negative X must produce a negative angle");
+    Feature_Reset(&state);
+    for (i = 0; i < 17u; i++) {
+        if (AI_Pipeline_Push(&state, (float)(20u * i), (float)(5u * i),
+                             (i == 0u) ? 0.0f : 0.1f,
+                             &features, normalized, input))
+            generated++;
+    }
+    passed &= check(generated == 2u,
+                    "10-frame window with stride 5 must emit twice after 15 finalized samples");
+    passed &= check(AI_TemporalCount(&state) == AI_WINDOW_FRAMES,
+                    "ring buffer count must stop at window size");
+    passed &= check(AI_TemporalGet(&state, 0u, &previous),
+                    "ring buffer logical index zero");
+    for (i = 1; i < AI_WINDOW_FRAMES; i++) {
+        passed &= check(AI_TemporalGet(&state, i, &current),
+                        "ring buffer logical index");
+        passed &= check(current.x > previous.x,
+                        "ring buffer order must remain chronological after wrap");
+        previous = current;
+    }
+    return passed;
+}
 
-    tracks[2].active = 0;
-    TargetUI_Update(&ui, &tracks[2]);
-    passed &= check(!ui.valid && !ui.predicted,
-                    "inactive track must reset UI flags");
+static int test_tracking_and_reset(void)
+{
+    KalmanTrack tracks[LD2450_TARGET_COUNT];
+    ld2450_frame_t frame = {0};
+    TrackingResult result;
+    TargetFeatureState pipeline;
+    AI_Features features;
+    float normalized[AI_FEATURE_COUNT];
+    int8_t input[AI_FEATURE_COUNT];
+    uint32_t i;
+    int passed = 1;
 
-    Feature_Reset(&states[0]);
-    passed &= check(!states[0].initialized,
-                    "feature history must reset with a track");
+    for (i = 0; i < LD2450_TARGET_COUNT; i++)
+        Kalman_Reset(&tracks[i]);
+    Kalman_Init(&tracks[0], -500.0f, 1000.0f, 0.1f,
+                1000.0f, 2500.0f, 2500.0f);
+    Kalman_Init(&tracks[1], 500.0f, 1000.0f, 0.1f,
+                1000.0f, 2500.0f, 2500.0f);
 
+    frame.target[0].valid = 1u;
+    frame.target[0].x_mm = 520;
+    frame.target[0].y_mm = 1000;
+    frame.target[1].valid = 1u;
+    frame.target[1].x_mm = -480;
+    frame.target[1].y_mm = 1000;
+    Tracking_Update(&frame, tracks, 0.1f, &result);
+    passed &= check(result.detection_for_track[0] == 1 &&
+                    result.detection_for_track[1] == 0,
+                    "association must preserve identity when LD2450 slots swap");
+    passed &= check(result.detection_for_track[0] != result.detection_for_track[1],
+                    "one detection must not update two tracks");
+
+    Feature_Reset(&pipeline);
+    for (i = 0; i < 4u; i++)
+        AI_Pipeline_Push(&pipeline, (float)i, 0.0f,
+                         (i == 0u) ? 0.0f : 0.1f,
+                         &features, normalized, input);
+    frame.target[0].valid = 0u;
+    frame.target[1].valid = 0u;
+    for (i = 0; i <= TRACKING_MAX_MISSES; i++)
+        Tracking_Update(&frame, tracks, 0.1f, &result);
+    passed &= check((result.reset_mask & 0x03u) == 0x03u,
+                    "tracks must reset after miss threshold");
+    if (result.reset_mask & 0x01u)
+        Feature_Reset(&pipeline);
+    passed &= check(AI_TemporalCount(&pipeline) == 0u &&
+                    pipeline.raw_count == 0u,
+                    "track reset must clear temporal state");
+    return passed;
+}
+
+int main(void)
+{
+    int passed = 1;
+
+    passed &= test_feature_formulas();
+    passed &= test_normalization_and_quantization();
+    passed &= test_ring_and_stride();
+    passed &= test_tracking_and_reset();
     if (!passed)
         return 1;
-
-    puts("PASS: motion feature and UI calculations");
+    puts("PASS: tracking, temporal preprocessing, 15 features, normalization, INT8");
     return 0;
 }

@@ -1,26 +1,26 @@
 //
 //Written by GowinSynthesis
 //Tool Version "V1.9.12.03 (64-bit)"
-//Tue Aug 18 09:24:22 2026
+//Mon Sep 14 15:56:06 2026
 
 //Source file index table:
-//file0 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/countdown_timer.v"
-//file1 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/edge_finder.v"
-//file2 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/gowin_rpll_20k/gowin_rpll.v"
-//file3 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/i2c.v"
-//file4 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/i2c_mmio.v"
-//file5 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/ld2450_uart.v"
-//file6 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/leds.v"
-//file7 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/picorv32.v"
-//file8 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/reset.v"
-//file9 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/sd_spi_helper.v"
-//file10 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/simpleuart.v"
-//file11 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/sram.v"
-//file12 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/sram8bit.v"
-//file13 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/top.v"
-//file14 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/uart_wrap.v"
-//file15 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/ws2812b.v"
-//file16 "\C:/Users/Mr\ T/Desktop/TangNano20K_Test/src/ws2812b_tgt.v"
+//file0 "\D:/DATKHTS/TangNano20K_Test/src/countdown_timer.v"
+//file1 "\D:/DATKHTS/TangNano20K_Test/src/edge_finder.v"
+//file2 "\D:/DATKHTS/TangNano20K_Test/src/gowin_rpll_20k/gowin_rpll.v"
+//file3 "\D:/DATKHTS/TangNano20K_Test/src/i2c.v"
+//file4 "\D:/DATKHTS/TangNano20K_Test/src/i2c_mmio.v"
+//file5 "\D:/DATKHTS/TangNano20K_Test/src/ld2450_uart.v"
+//file6 "\D:/DATKHTS/TangNano20K_Test/src/leds.v"
+//file7 "\D:/DATKHTS/TangNano20K_Test/src/picorv32.v"
+//file8 "\D:/DATKHTS/TangNano20K_Test/src/reset.v"
+//file9 "\D:/DATKHTS/TangNano20K_Test/src/sd_spi_helper.v"
+//file10 "\D:/DATKHTS/TangNano20K_Test/src/simpleuart.v"
+//file11 "\D:/DATKHTS/TangNano20K_Test/src/sram.v"
+//file12 "\D:/DATKHTS/TangNano20K_Test/src/sram8bit.v"
+//file13 "\D:/DATKHTS/TangNano20K_Test/src/top.v"
+//file14 "\D:/DATKHTS/TangNano20K_Test/src/uart_wrap.v"
+//file15 "\D:/DATKHTS/TangNano20K_Test/src/ws2812b.v"
+//file16 "\D:/DATKHTS/TangNano20K_Test/src/ws2812b_tgt.v"
 `timescale 100 ps/100 ps
 module Gowin_rPLL (
   clk_in_d,

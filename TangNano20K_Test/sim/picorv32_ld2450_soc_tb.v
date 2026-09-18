@@ -5,7 +5,7 @@
  *
  * This test runs the real firmware from src/mem_init[0-3].ini, models the
  * LD2450 command/ACK exchange, sends a three-target frame, decodes the SoC
- * USB UART output, and checks the valid-target LED mask.
+ * USB UART output, and checks the tracking LED mask.
  */
 
 /* Simulation replacement for the Gowin PLL.  The project input and system
@@ -39,8 +39,8 @@ module picorv32_ld2450_soc_tb;
     wire sd_mosi;
     wire sd_clk;
     wire uart_tx;
-    wire oled_scl;
-    tri  oled_sda;
+    wire i2c_scl;
+    tri  i2c_sda;
     wire [5:0] leds;
 
     integer sensor_errors = 0;
@@ -52,11 +52,10 @@ module picorv32_ld2450_soc_tb;
     reg [7:0] end_command [0:11];
     reg [7:0] target_frame [0:29];
 
-    string usb_line;
+    reg [8*128-1:0] usb_line;
     reg configuration_ok_seen = 1'b0;
-    reg target1_seen = 1'b0;
-    reg target2_seen = 1'b0;
-    reg target3_seen = 1'b0;
+    reg waiting_for_frames_seen = 1'b0;
+    reg frame_sent = 1'b0;
 
     /* 27 MHz input clock. */
     always #18.5185 clk_in = ~clk_in;
@@ -74,10 +73,23 @@ module picorv32_ld2450_soc_tb;
         .sd_clk(sd_clk),
         .uart_rx(uart_rx),
         .uart_tx(uart_tx),
-        .oled_scl(oled_scl),
-        .oled_sda(oled_sda),
+        .i2c_scl(i2c_scl),
+        .i2c_sda(i2c_sda),
         .leds(leds)
     );
+
+    initial begin
+        if ($test$plusargs("WAVE_ONLY")) begin
+            $dumpfile("picorv32_ld2450_soc_tb.vcd");
+            $dumpvars(0, clk_in, reset_button, radar_rx, radar_tx,
+                         uart_tx, leds);
+            $dumpvars(0, dut.reset_n, dut.mem_valid, dut.mem_ready,
+                         dut.mem_instr, dut.mem_addr, dut.mem_wdata,
+                         dut.mem_rdata, dut.mem_wstrb);
+            $dumpvars(0, configuration_ok_seen, waiting_for_frames_seen,
+                         frame_sent, sensor_errors);
+        end
+    end
 
     task receive_radar_byte;
         output [7:0] data;
@@ -159,12 +171,8 @@ module picorv32_ld2450_soc_tb;
 
                 if (usb_line == "Configuring LD2450 multi-target mode... OK")
                     configuration_ok_seen = 1'b1;
-                if (usb_line == "  T1: distance=2.228 m, velocity=0.000 m/s")
-                    target1_seen = 1'b1;
-                if (usb_line == "  T2: not detected")
-                    target2_seen = 1'b1;
-                if (usb_line == "  T3: distance=4.177 m, velocity=0.000 m/s")
-                    target3_seen = 1'b1;
+                if (usb_line == "Waiting for 30-byte target frames...")
+                    waiting_for_frames_seen = 1'b1;
 
                 usb_line = "";
             end else begin
@@ -262,32 +270,35 @@ module picorv32_ld2450_soc_tb;
         end
         send_ack(8'hfe);
 
-        /* Allow firmware to consume the ACK and clear the RX FIFO. */
-        repeat (2000) @(posedge clk_in);
+        wait (configuration_ok_seen);
+        wait (waiting_for_frames_seen);
+        repeat (500) @(posedge clk_in);
         for (i = 0; i < 30; i = i + 1)
             send_radar_byte(target_frame[i]);
+        frame_sent = 1'b1;
     end
 
     /* End-to-end pass condition. */
     initial begin
-        wait (configuration_ok_seen && target1_seen && target2_seen && target3_seen);
+        wait (configuration_ok_seen && frame_sent);
+        wait (dut.soc_leds.leds_data_o[5:0] == 6'b000011);
         repeat (500) @(posedge clk_in);
 
         if (sensor_errors != 0) begin
             $display("FAIL: %0d LD2450 model error(s)", sensor_errors);
             $fatal(1);
         end
-        if (dut.soc_leds.leds_data_o[5:0] !== 6'b000101) begin
-            $display("FAIL: logical LED mask = %06b, expected 000101",
+        if (dut.soc_leds.leds_data_o[5:0] !== 6'b000011) begin
+            $display("FAIL: logical LED mask = %06b, expected 000011",
                      dut.soc_leds.leds_data_o[5:0]);
             $fatal(1);
         end
-        if (leds !== 6'b111010) begin
-            $display("FAIL: active-low board LEDs = %06b, expected 111010", leds);
+        if (leds !== 6'b111100) begin
+            $display("FAIL: active-low board LEDs = %06b, expected 111100", leds);
             $fatal(1);
         end
 
-        $display("PASS: full PicoRV32 firmware + LD2450 three-target integration");
+        $display("PASS: full PicoRV32 firmware + LD2450 tracking integration");
         $finish;
     end
 
@@ -295,9 +306,9 @@ module picorv32_ld2450_soc_tb;
     initial begin
         repeat (4000000) @(posedge clk_in);
         $display("FAIL: SoC simulation timeout");
-        $display("  config=%0d T1=%0d T2=%0d T3=%0d sensor_errors=%0d",
-                 configuration_ok_seen, target1_seen, target2_seen,
-                 target3_seen, sensor_errors);
+        $display("  config=%0d ready=%0d frame_sent=%0d logical_led_mask=%06b physical_leds=%06b sensor_errors=%0d",
+                 configuration_ok_seen, waiting_for_frames_seen, frame_sent,
+                 dut.soc_leds.leds_data_o[5:0], leds, sensor_errors);
         $fatal(1);
     end
 endmodule
